@@ -1,0 +1,13 @@
+# Absolute path to an OAI "Complete Data - ASCII" download on this machine. One
+# line; # starts a comment. Gitignored -- copy to oai_clinical_root.txt and edit.
+#
+# Needed ONLY by pipeline/derive_table_ed1_cohort.py (the cohort table). The
+# OAI clinical files are participant-level data under the OAI data-use
+# agreement and are never vendored into the data root; obtain them from
+# https://nda.nih.gov/oai (create an account, accept the terms, download
+# "Complete Data - ASCII", unzip). The directory must contain General_ASCII/,
+# AllClinical_ASCII/ and "X-Ray Image Assessments_ASCII/".
+#
+# Resolution order: $OAI_CLINICAL_ROOT -> oai_clinical_root.txt -> fail loudly
+
+/path/to/OAI_Clinical_Data/Complete_Data_ASCII

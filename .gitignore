@@ -1,0 +1,43 @@
+# The data root. Bytes live outside the repository; see README.md.
+/data
+/data_root.txt
+
+# Local OAI clinical download (participant-level, never vendored); see
+# pipeline/derive_table_ed1_cohort.py. Site configuration, like data_root.txt.
+/oai_clinical_root.txt
+
+# This machine's vendoring source roots, merged over the placeholders in
+# pipeline/vendor_sources.json. Site configuration, like data_root.txt.
+/pipeline/vendor_sources.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Environments
+.venv/
+venv/
+.env
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Cluster
+slurm-*.out
+*.sbatch.log
+
+# Local run logs
+/logs
+
+# Rendered figures. Products of figures/*.py -- regenerate, do not commit.
+/figures/output
+
+# OpenSim writes this beside the process working directory
+opensim.log

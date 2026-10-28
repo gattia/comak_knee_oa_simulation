@@ -1,0 +1,26 @@
+# OpenSim's command-line tool, for the AddBiomechanics engine. Linux x86-64.
+#
+#   conda env create -f tools/addbiomechanics/opensim_environment.yml
+#
+# The engine writes every scaled model it outputs (match_markers_and_physics.osim
+# included, the body the simulations use) by running `opensim-cmd run-tool` on a
+# scale setup it generates. This is stock OpenSim 4.5.2 from the OpenSim team's
+# conda channel. The channel serves a later build under the same name and
+# version: `opensim-cmd --version` reports 4.5.2-2025-05-02-fcdbeacb2, where the
+# paper's build reported 4.5.1-2025-04-01-5cf2dacc8. Both write byte-identical
+# scaled models (tools/addbiomechanics/README.md, "The OpenSim build"), and
+# run_addbiomechanics.py accepts both. It is not the JAM build the simulations
+# use, and it lives in its own environment because its Python (3.11) differs
+# from the engine's (3.9). tools/addbiomechanics/bin/opensim-cmd exposes only
+# this one program to the engine.
+
+name: ab_opensim
+
+channels:
+  - opensim_admin
+  - conda-forge
+
+dependencies:
+  - python=3.11.11
+  - numpy=1.25.2
+  - opensim_admin::opensim=4.5.2=py311np125

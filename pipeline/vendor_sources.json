@@ -1,0 +1,107 @@
+{
+  "_description": "Where the vendored inputs were copied from, and which inputs they are. Nothing in the pipeline reads the roots: only pipeline/vendor_inputs.py does, and only when assembling the released dataset from its sources. Users of the dataset download 00_inputs/ and 01_models/ and do not need this file.",
+  "_why_this_is_not_in_the_code": "Source locations are a property of one filesystem; the input SET is a property of the method. Keeping them apart is what lets tests/test_no_absolute_paths.py stay absolute about absolute paths, and what makes it obvious that these six roots are the whole of the pipeline's external surface.",
+  "_roots_are_placeholders": "The roots below ship as <PLACEHOLDER>: they describe one site's directory layout, which is site configuration rather than method. To re-assemble the dataset, put the real values in vendor_sources.local.json beside this file. It is gitignored, holds only a 'roots' key, and is merged over these by vendor_inputs._load_spec(). An unresolved placeholder stops the run with a message naming the file.",
+  "_recorded": "2026-08-20",
+  "roots": {
+    "oai_meshes": "<OAI_MESHES_ROOT>",
+    "oai_segmentations": "<OAI_SEGMENTATIONS_ROOT>",
+    "shape_fits": "<SHAPE_FITS_ROOT>",
+    "requirements": "<REQUIREMENTS_ROOT>",
+    "step1_results": "<STEP1_RESULTS_ROOT>",
+    "queues": "<QUEUES_ROOT>"
+  },
+  "cohort": {
+    "_note": "The knees to vendor. Defined as every knee with a completed anatomical reconstruction in the primary Step-1 run, minus the exclusions. Resolved once and written to 00_inputs/cohort.json so every later stage reads a list rather than re-deriving one.",
+    "timepoint": "00m",
+    "step1_run": "OARSI_May.22.2026_Full_run",
+    "exclude": []
+  },
+  "_gaits_note": "The measured gait donors whose inputs are vendored. The list matches comak_knee_oa.cohorts.MEASURED_DEFAULT. The v2 run used RSubject_121 as its ninth donor in place of Subject_121; RSubject_121 is not the participant the donor-selection design chose.",
+  "gaits": [
+    "Subject_102",
+    "Subject_107",
+    "Subject_109",
+    "Subject_114",
+    "Subject_119",
+    "Subject_121",
+    "Subject_140",
+    "Subject_145",
+    "Subject_167"
+  ],
+  "visits": [
+    "V00",
+    "V01",
+    "V03",
+    "V05",
+    "V06",
+    "V08",
+    "V10"
+  ],
+  "shape_fit_site": "STANFORD",
+  "segmentation_names": [
+    "SAG_3D_DESS_{SIDE}_orig_med_lat_tib_cart_no_correction-label.nrrd",
+    "SAG_3D_DESS_{SIDE}_bones_cart_men_fib-label.nrrd"
+  ],
+  "mesh_suffixes": [
+    "femur",
+    "femur_cart",
+    "tibia",
+    "tibia_cart",
+    "patella",
+    "patella_cart",
+    "med_men",
+    "lat_men"
+  ],
+  "reference_tree": {
+    "_note": "Subtrees of the requirements root to vendor, mirrored verbatim into 00_inputs/reference so nothing downstream has to learn a new layout.",
+    "include": [
+      "nsm_models",
+      "nsm_meshes",
+      "nsm_meshes_mean",
+      "nsm_meshes_mean_2output",
+      "fitted_base_wrap_surfaces",
+      "ligament_strain_stiffness",
+      "ligament_tendon_attachment",
+      "data/reference_data",
+      "data/JAMupdate",
+      "med_tibia_men_center_points.csv",
+      "lat_tibia_men_center_points.csv"
+    ],
+    "_excluded": {
+      "deprecated": "older mesh and wrap-surface snapshots, not read by any code",
+      "data/opencap_data": "a different study's markerless capture data; not read by this pipeline",
+      "data/stanford_gait_retraining_data": "vendored selectively under 00_inputs/gait -- the per-gait AddBiomechanics results are needed, the source archives and the MATLAB workspace are not"
+    }
+  },
+  "gait_tree": {
+    "_note": "Measured-gait inputs, per gait donor. multigait_bases holds the body-scaled generic model each cohort is built onto; addbiomechanics holds the marker trajectories, ground reaction forces and the marker-matched model the scale factor is derived from.",
+    "multigait_bases": "multigait_bases",
+    "addbiomechanics": "data/stanford_gait_retraining_data/AddBiomechanics_Results"
+  },
+  "model_tree": {
+    "_note": "Per-knee Step-1 output to vendor into 01_models. The COMAK results subdirectory of the same source tree is NOT vendored here: simulations are stage 02 and are run by the pipeline, not copied.",
+    "_not_yet_vendored": "Run this group last, after the source tree's geometry is de-duplicated. Before de-duplication each knee carries three byte-identical copies of the same geometry directory, of which one is used, plus ~150 generic display meshes shared by every knee: ~270 MB per knee against ~6 MB after, so vendoring first would copy roughly 200 GB of duplicates.",
+    "_layout_is_mirrored_deliberately": "The destination mirrors the source directory names, long and repetitive as they are, so each vendored file maps to its source path by name and renaming stays a separate step from copying.",
+    "include": [
+      "custom_nsm_full_body_healthy_knee_model",
+      "geometries_nsm_similarity",
+      "run_config.json",
+      "timing.txt"
+    ]
+  },
+  "simulation_tree": {
+    "_note": "The reference-gait arm's COMAK output. The nine measured-gait cohorts are written into 02_simulations by the pipeline itself and need no vendoring; the reference arm was produced in a separate results tree and is copied in here, so the stage holds all ten conditions.",
+    "_destination_is_not_declared_here": "The destination comes from config/reference_gait.json's run.results_dir, read at plan time, so the place this stage writes to cannot drift from the place every derivation (e.g. derive_figure2_data.py) reads from. A mismatch would surface only as ordinary 'simulation did not complete' rows.",
+    "run": "OARSI_May.22.2026_Full_run",
+    "results_subdir": "comak_results_May.22.2026_Full_run",
+    "required_output": "joint-mechanics/joint_mechanics.h5",
+    "_coverage_vs_missing": "A knee with no results directory at all is a defect: the condition was never attempted for it. A knee whose directory exists but holds no joint_mechanics.h5 is a simulation that did not converge -- legitimate, reported as coverage. Same distinction the shape fits draw between a missing baseline and a missed follow-up visit.",
+    "_geometry_cleanup": "Not run on this cohort: each knee has one Geometry directory, so there was nothing to de-duplicate."
+  },
+  "group_labels": {
+    "_note": "Disease-group assignment for the cohort: healthy, mild OA, and incident OA, 252 knees each. Copied verbatim; group-comparison analyses read this vendored file.",
+    "source": "sample_used_for_OARSI_analysis_Nov.11.2024.json",
+    "dest": "groups.json"
+  }
+}

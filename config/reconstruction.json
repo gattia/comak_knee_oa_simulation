@@ -1,0 +1,50 @@
+{
+  "_description": "Anatomical reconstruction: fit the neural shape models to one knee's segmentation meshes and build its subject-specific OpenSim model. One reconstruction per knee serves every gait condition.",
+  "run": {
+    "_note": "The run placeholder is filled with the run the data root declares (its _run.json). The models a run builds live under 01_models/<run>/, beside the saved fits it rebuilds from.",
+    "output_dir": "01_models/{run}/{knee}"
+  },
+  "inputs": {
+    "_saved_fits_note": "rebuild only: the knee's existing reconstruction, whose saved shape-model fit (latents, alignment, decoded surfaces) is built from again without refitting. Must differ from run.output_dir. These are the v2 run's fits; a new data root links them in read-only (python -m comak_knee_oa.new_root link --root <root> 01_models/OARSI_May.22.2026_Full_run).",
+    "saved_fits": "01_models/OARSI_May.22.2026_Full_run/{knee}",
+    "subject_meshes": "00_inputs/meshes/{timepoint}/{subject}",
+    "reference_meshes": "00_inputs/reference/nsm_meshes",
+    "shape_models": "00_inputs/reference/nsm_models",
+    "labeled_bones": "00_inputs/reference/fitted_base_wrap_surfaces/labeled_bones",
+    "ligament_attachments": "00_inputs/reference/ligament_tendon_attachment/ligament_tendon_attachment_meniscus_new.json",
+    "base_model": "00_inputs/reference/data/reference_data/comak_models/May.22.2026_Full_run",
+    "smith2019_model": "00_inputs/reference/data/reference_data/comak_models/smith2019/smith2019.osim"
+  },
+  "reconstruction": {
+    "_note": "Fitting is seeded (Python, NumPy, PyTorch, CUDA); a refit is still not bit-identical, because the GPU backward pass and mesh extraction vary, so reconstructions are compared by surface distance. The shape models fit at 20k sampled points per surface with similarity registration.",
+    "model_name": "full_body_healthy_knee",
+    "model_version": "{run}",
+    "seed": 0,
+    "n_samples_latent_recon": 20000,
+    "convergence_patience": 10,
+    "rigid_registration": "similarity",
+    "bone_clusters_femur_tibia": 20000,
+    "bone_clusters_patella": 10000,
+    "triangle_density": 3000000,
+    "ligament_normal_shift_m": 0.0005,
+    "wrap_n_restarts": 1,
+    "wrap_jitter_scale": 1e-06,
+    "wrap_fit_mode": "lbfgs_smith2019_anchor",
+    "label_correspondence_transform_kind": "auto",
+    "project_meniscal_to_tibia": false,
+    "_meniscus_center_note": "Origin of the radial trim applied to each meniscus contact surface. midline: one point midway between the tibial plateau centres (tibia_labeled_v2.vtk). as_run: one point per meniscus, the centroid of its centre label on the labelled tibia, as the v2 models were built. The two give contact surfaces that agree to within a few percent of their area.",
+    "meniscus_center_mode": "midline",
+    "_fatpad_clearance_note": "Direction of the rays that stop the prefemoral fat pad short of the patella. dilation_normals: along the direction the fat pad is grown. auto_oriented: along normals recomputed on the open bone patch, which in about half of knees point into the bone, so the patella never limits the fat pad; nsosim's default when the key is absent, and how the v2 models were built.",
+    "fatpad_clearance_rays": "dilation_normals"
+  },
+  "material_properties": {
+    "_note": "The patellar tendon is stiffened to four times its literature default to keep the patellofemoral joint stable through gait. The prefemoral fat pad is a soft elastic contact 10 mm thick.",
+    "patellar_tendon_stiffness_N": 12000,
+    "patellar_tendon_default_stiffness_N": 3000,
+    "fatpad_elastic_modulus_Pa": 4000000,
+    "fatpad_poissons_ratio": 0.45,
+    "fatpad_thickness_m": 0.01,
+    "fatpad_min_proximity_m": 0.0,
+    "fatpad_max_proximity_m": 0.008
+  }
+}

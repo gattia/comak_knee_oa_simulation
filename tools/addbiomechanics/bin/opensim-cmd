@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# OpenSim's command-line tool, as the AddBiomechanics engine sees it.
+#
+# The engine writes its scaled models by running `opensim-cmd run-tool` in a
+# shell. OpenSim lives in its own environment (opensim_environment.yml), so this
+# script exposes that one program instead of putting the whole environment, and
+# its Python, on PATH. AB_OPENSIM_PREFIX is that environment's prefix;
+# pipeline/run_addbiomechanics.py sets it, and records the version this reports.
+set -euo pipefail
+prefix="${AB_OPENSIM_PREFIX:?set AB_OPENSIM_PREFIX to the prefix of the environment made from tools/addbiomechanics/opensim_environment.yml}"
+export LD_LIBRARY_PATH="$prefix/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$prefix/bin/opensim-cmd" "$@"

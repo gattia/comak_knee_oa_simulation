@@ -1,0 +1,67 @@
+{
+  "_description": "Reference gait: one measured walking trial applied to every knee, at the size the reconstruction produced. Holding the motion fixed across the cohort isolates the effect of anatomy on contact mechanics.",
+  "run": {
+    "_note": "The condition's key is 'default': the cohort module, the derived pressure trees and the quality-control table all file the reference gait under that name. Its simulations live under 02_simulations/reference.",
+    "condition": "reference",
+    "gait": "default",
+    "results_dir": "02_simulations/reference/{knee}/comak_{run}"
+  },
+  "model": {
+    "built_model": "01_models/{run}/{knee}/custom_nsm_full_body_healthy_knee_model/full_body_healthy_knee_nsm_{knee}_{run}/full_body_healthy_knee_nsm_{knee}_{run}.osim",
+    "reserve_actuators": "00_inputs/reference/data/reference_data/comak_models/current/smith2019_reserve_actuators.xml",
+    "ligament_parameters": "ligament_strain_stiffness/lenhart_defaults_plus_smith_menisci_lig_params_Oct.15.2025.json"
+  },
+  "reference_gait": {
+    "_note": "The time window is a property of this one trial, so it is fixed rather than detected. Overriding it in comak_timing is possible but only makes sense with a different trial.",
+    "markers": "00_inputs/reference/data/reference_data/motion_analysis/overground_17.trc",
+    "external_loads": "00_inputs/reference/data/reference_data/motion_analysis/overground_17_ext_loads.xml"
+  },
+  "comak_timing": {
+    "_note": "The secondary-coordinate sweep stops at 60 degrees of flexion. Walking inverse kinematics spans 0-46 degrees, so this covers the range with headroom while staying out of the high-flexion regime where the sweep stalls. The sweep itself runs at 0.6 s and falls back to 1.2 s when that times out.",
+    "secondary_constraint_sim_sweep_time": 0.6,
+    "secondary_constraint_sim_sweep_time_fallback": 1.2,
+    "secondary_coupled_coordinate_stop_value": 60,
+    "_comak_window_note": "COMAK resamples IK at 0.01 s and keeps times inside the window. On the measured (AddBiomechanics) trials, stamped at 100.008 Hz, that drops the first and last stance frames, so their configs pad the window by 0.005 s. This overground reference trial is stamped on its own 0.01 s grid, and COMAK keeps every stance frame without a pad; a pad would only shift the inverse-dynamics and joint-mechanics output grids, so the reference stays at 0.0. Required, no default.",
+    "comak_window_pad_s": 0.0,
+    "start_time_ik": 1.16,
+    "stop_time_ik": 2.36,
+    "start_time_comak": 1.26,
+    "stop_time_comak": 1.95
+  },
+  "timeouts": {
+    "_note": "Wall-clock budgets per solver stage. The forward-simulation budget and retry count are set so that a knee whose patella needs repositioning gets up to three attempts; the observed maximum need was two, and each attempt moves the patella 4 mm, so a higher cap would start displacing it unrealistically.",
+    "settle_sim_seconds": 600,
+    "sweep_sim_seconds": 7200,
+    "comak_tool_seconds": 28800,
+    "forsim_seconds": 1800,
+    "forsim_max_updates": 3
+  },
+  "comak_optimizer": {
+    "_note": "Convergence is gated on the inertia-scaled residual rather than on joint accelerations, so the very low inertia meniscus degrees of freedom do not dominate the test.",
+    "max_iterations": 25,
+    "ipopt_max_iterations": 500,
+    "contact_energy_weight": 0,
+    "convergence_criterion": "generalized_force",
+    "generalized_force_tolerance": 1.0,
+    "generalized_force_worse_case_tolerance": 50.0
+  },
+  "muscle_weights": {
+    "_note": "Hamstrings are de-emphasised so the optimiser does not lean on them.",
+    "use_muscle_weights": true,
+    "hamstring_weight": 2,
+    "hamstring_muscles": [
+      "bflh_r",
+      "bfsh_r",
+      "semiten_r",
+      "semimem_r"
+    ]
+  },
+  "model_settling": {
+    "settle_sim_reps": 2,
+    "patella_position_update_m": [
+      0,
+      -0.004,
+      0
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+# The environment the results were produced in, as a readable spec.
+#
+#   CONDA_CHANNEL_PRIORITY=flexible conda env create -f environment.yml
+#   conda activate comak-knee-oa
+#
+# (flexible: MKL comes from the `anaconda` channel, which strict channel priority
+# excludes because conda-forge has an MKL of its own, a different binary.)
+#
+# For an exact copy use the lock instead (environment.lock.txt, then
+# requirements.lock.txt): it installs every package file the paper's runs used,
+# by md5. This file names the same versions but lets the solver fill in the
+# rest, so it is the readable summary, and docs/environment.md says how far it
+# was tested.
+#
+# Then add by hand what no package index supplies: OpenSim with the JAM solver
+# (built from source), the four pinned libraries (NSM, pymskt, nsosim, pycomak,
+# run from exports of exact commits), and pyKneeSPM for Figure 5's surface
+# statistics. docs/environment.md says how. Without them this environment can
+# render every figure and run the derivations that do not touch OpenSim; it
+# cannot build models or simulate gait.
+#
+# Rendering the figures does not need any of this. It needs five packages, in
+# requirements-figures.txt.
+
+name: comak-knee-oa
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.9.19
+
+  # NumPy comes from conda-forge rather than PyPI because that is where the
+  # recorded environment's copy came from, and the two link different BLAS
+  # builds.
+  - numpy=2.0.2=py39h9cb892a_0
+
+  # The BLAS, pinned to the builds the paper's runs loaded. Simulations depend on
+  # it: the same knee and CPU in an environment whose BLAS was OpenBLAS 0.3.34
+  # moved by up to 1.3 degrees and 0.4 % in tibial pressure. numpy runs on MKL
+  # (through conda-forge's libblas), and the solver's Simbody on OpenBLAS 0.3.21.
+  # `PYTHONPATH=src python -m comak_knee_oa.pins check --strict` compares their md5s.
+  - libblas=3.9.0=16_linux64_mkl
+  - libcblas=3.9.0=16_linux64_mkl
+  - liblapack=3.9.0=16_linux64_mkl
+  - anaconda::mkl=2022.1.0=hc2b9512_224
+  - anaconda::intel-openmp=2022.0.1=h06a4308_3633
+  - libopenblas=0.3.21=pthreads_h78a6416_3
+
+  # VTK from conda-forge, the build the paper's runs loaded, with vtkbool
+  # (pymskt's mesh booleans). This VTK renders off-screen through OSMesa, which
+  # later mesalib releases do not ship (libOSMesa.so.8), so mesalib is pinned
+  # too.
+  - vtk=9.2.5=osmesa_py39h899ec80_103
+  - vtkbool=2.9.5
+  - mesalib=23.0.2
+
+  - pip
+
+  - pip:
+      - scipy==1.13.1
+      - pandas==2.2.2
+      - matplotlib==3.9.2
+      - h5py==3.11.0
+      - pyvista==0.45.3
+      - SimpleITK==2.4.0
+      - pyacvd==0.3.0
+      - cycpd==0.28
+      - pytest==8.4.2
+
+      # Imported at load time by the pinned libraries: pymskt (nibabel) and NSM
+      # (scikit-image, scikit-learn, wandb; reached through nsosim). Without any
+      # one of them model building and simulation cannot start. scikit-learn is
+      # also the ROC figure's classifier.
+      - nibabel==5.3.2
+      - scikit-image==0.24.0
+      - scikit-learn==1.5.1
+      - wandb==0.17.8
+
+      # SPM: Figure 2's derivation (and pyKneeSPM, for Figure 5).
+      - spm1d==0.4.33
+
+      # NSM's optional Sinkhorn loss (shape-model fitting). Without it NSM prints
+      # "Error importing `sinkhorn`" and carries on.
+      - pykeops==2.2.3
+      - keopscore==2.2.3
+
+      # GPU only: anatomical reconstruction (01_models) and the thickness
+      # derivation. Everything from 03_derived onward runs without Torch, so
+      # delete these two lines for a CPU-only environment.
+      #
+      # The recorded environment installed Torch from the `pytorch` conda
+      # channel. That build cannot be solved for: it depends on
+      # pytorch-cuda 11.8, whose CUDA 11.8 runtime packages are not
+      # resolvable from the `nvidia` channel or its cuda-11.8.0 label. The
+      # PyTorch wheel index still serves the same version against the same CUDA
+      # minor, so the spec uses it. Same version, same CUDA, different packaging.
+      - --extra-index-url https://download.pytorch.org/whl/cu118
+      - torch==2.3.1+cu118
+
+      # Installed from source at a pinned commit. Neither is on PyPI, so a
+      # version number does not identify them — pymskt reports 0.1.20 while its
+      # installed distribution metadata says 0.1.19. The commit is the
+      # identifier that means something. Both commits are on their repository's
+      # public main branch. Installed here for their dependencies; the pipeline
+      # imports the exports put first on PYTHONPATH (docs/environment.md).
+      - git+https://github.com/gattia/pymskt@88b947e3075d270f345bf7f8b545ead7daefd125
+      - git+https://github.com/gattia/nsm@bb2c6a3b17bd2cdb6b3378ea11528763e2698bf2

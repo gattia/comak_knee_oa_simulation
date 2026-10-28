@@ -1,0 +1,26 @@
+# Rendering the manuscript figures from the 04_results stage of the data root.
+#
+#   python -m pip install -r requirements-figures.txt
+#   python figures/render_all.py
+#
+# Five packages. No GPU, no OpenSim, no R, no simulation tree — the figure
+# scripts read small tables and images out of 04_results and draw them.
+#
+# Versions are the ones the manuscript figures were rendered with
+# (docs/pinned_versions.md). Matplotlib's exact version changes glyph placement
+# and antialiasing by a pixel or two, so a render from a different version is
+# equal in every number and not equal byte for byte. Renders from pip wheels can
+# also differ from the shipped ones by one intensity level in a few hundred
+# pixels (Figure 6), because the numerical libraries differ.
+#
+# Python 3.9 to 3.11: every pin has a wheel there (Pillow 9.4.0 has none for
+# Python 3.12 or later).
+#
+# To re-derive those tables, or to run any earlier stage, use the full environment
+# (environment.lock.txt; docs/environment.md).
+
+numpy==2.0.2
+pandas==2.2.2
+matplotlib==3.9.2
+scipy==1.13.1
+pillow==9.4.0

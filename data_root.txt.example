@@ -1,0 +1,11 @@
+# Absolute path to the data root on this machine. One line; # starts a comment.
+#
+# This file is gitignored -- it records how THIS machine is set up, not how the
+# pipeline is defined. Copy it to data_root.txt and edit.
+#
+# You only need this if the data lives somewhere other than <repo>/data. A
+# HuggingFace download into <repo>/data needs no configuration at all.
+#
+# Resolution order: $COMAK_DATA_ROOT -> data_root.txt -> <repo>/data
+
+/path/to/comak_knee_oa_simulation_data

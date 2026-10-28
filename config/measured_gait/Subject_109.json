@@ -1,0 +1,83 @@
+{
+  "_description": "Measured gait, donor Subject_109. Every knee is scaled to this donor's body and walked through their measured motion and ground reaction forces. Repeating this across nine donors is what separates the effect of gait from the effect of anatomy.",
+  "run": {
+    "condition": "measured",
+    "gait": "Subject_109",
+    "results_dir": "02_simulations/Subject_109/{knee}/comak_{run}"
+  },
+  "model": {
+    "built_model": "01_models/{run}/{knee}/custom_nsm_full_body_healthy_knee_model/full_body_healthy_knee_nsm_{knee}_{run}/full_body_healthy_knee_nsm_{knee}_{run}.osim",
+    "reserve_actuators": "00_inputs/reference/data/reference_data/comak_models/current/smith2019_reserve_actuators.xml",
+    "ligament_parameters": "ligament_strain_stiffness/lenhart_defaults_plus_smith_menisci_lig_params_Oct.15.2025.json",
+    "scaled_model": "02_simulations/Subject_109/{knee}/scaled_model/scaled.osim"
+  },
+  "scaling": {
+    "_note": "Body scaling to this donor (pipeline/simulate_gait.py scaling_options). mass_rule is required, with no default. volume: each body's mass grows with its volume (sx*sy*sz) and the total is AddBiomechanics' own ; this is OpenSim's rule and the one AddBiomechanics uses for its segment masses. as_run: the segment masses of the v2 run. The scaling report records the rule used.",
+    "mass_rule": "volume"
+  },
+  "measured_gait": {
+    "_note": "Stance is detected from the vertical ground reaction force rather than assumed, and one stance phase is selected by index. Spans shorter than min_stance_frames are plate noise, not steps.",
+    "markers": "00_inputs/gait/addbiomechanics/Subject_109/MarkerData/markers_segment_3.trc",
+    "grf": "00_inputs/gait/addbiomechanics/Subject_109/ID/markers_segment_3_grf.mot",
+    "external_loads": "00_inputs/gait/addbiomechanics/Subject_109/ID/markers_segment_3_external_forces.xml",
+    "body_model": "00_inputs/gait/addbiomechanics/Subject_109/Models/match_markers_and_physics.osim",
+    "grf_vertical_column": "ground_force_calcn_r_vy",
+    "force_threshold_N": 10.0,
+    "stance_index": 5,
+    "ik_pad_s": 0.1,
+    "min_stance_frames": 40
+  },
+  "addbiomechanics": {
+    "_note": "What is typed into AddBiomechanics for this donor: the recorded Week-1 mass and height, with sex and age from DemoAll. pipeline/run_addbiomechanics.py reads this section. The model's mass is AddBiomechanics' physics-pass total, not mass_kg; the scaling report records the difference.",
+    "mass_kg": 94.6449746890944,
+    "height_m": 1.778,
+    "sex": "male",
+    "age_years": 67,
+    "trial": "baseline_TM1",
+    "source": "AllDataWorkspace.mat: KIN.S109.Wk1.HeightWeight.BW_kg and .h_m; DemoAll.gender and DemoAll.age"
+  },
+  "comak_timing": {
+    "_note": "The secondary-coordinate sweep stops at 60 degrees of flexion. Walking inverse kinematics spans 0-46 degrees, so this covers the range with headroom while staying out of the high-flexion regime where the sweep stalls. The sweep itself runs at 0.6 s and falls back to 1.2 s when that times out.",
+    "secondary_constraint_sim_sweep_time": 0.6,
+    "secondary_constraint_sim_sweep_time_fallback": 1.2,
+    "secondary_coupled_coordinate_stop_value": 60,
+    "_comak_window_note": "COMAK resamples IK at 0.01 s and keeps times inside the window; on the measured trials (100.007 Hz) that drops the first and last stance frames. comak_window_pad_s = 0.005 (half a step) keeps every stance frame and no others, and leaves the reference arm unchanged. Required, no default: 0.005 is the v3 value; 0.0 is the v2 run's value.",
+    "comak_window_pad_s": 0.005
+  },
+  "timeouts": {
+    "_note": "Wall-clock budgets per solver stage. The forward-simulation budget and retry count are set so that a knee whose patella needs repositioning gets up to three attempts; the observed maximum need was two, and each attempt moves the patella 4 mm, so a higher cap would start displacing it unrealistically.",
+    "settle_sim_seconds": 600,
+    "sweep_sim_seconds": 7200,
+    "comak_tool_seconds": 28800,
+    "forsim_seconds": 1800,
+    "forsim_max_updates": 3
+  },
+  "comak_optimizer": {
+    "_note": "Convergence is gated on the inertia-scaled residual rather than on joint accelerations, so the very low inertia meniscus degrees of freedom do not dominate the test.",
+    "max_iterations": 25,
+    "ipopt_max_iterations": 500,
+    "contact_energy_weight": 0,
+    "convergence_criterion": "generalized_force",
+    "generalized_force_tolerance": 1.0,
+    "generalized_force_worse_case_tolerance": 50.0
+  },
+  "muscle_weights": {
+    "_note": "Hamstrings are de-emphasised so the optimiser does not lean on them.",
+    "use_muscle_weights": true,
+    "hamstring_weight": 2,
+    "hamstring_muscles": [
+      "bflh_r",
+      "bfsh_r",
+      "semiten_r",
+      "semimem_r"
+    ]
+  },
+  "model_settling": {
+    "settle_sim_reps": 2,
+    "patella_position_update_m": [
+      0,
+      -0.004,
+      0
+    ]
+  }
+}

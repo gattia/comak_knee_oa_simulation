@@ -1,0 +1,38 @@
+{
+  "_description": "Figure 3 synthetic knees: the healthy-to-mild-OA shape axis, knees placed along it, each built like a cohort knee and walked through the nine measured gaits. Model building uses config/reconstruction.json and the simulations use config/measured_gait/<donor>.json; this file adds only the axis definition, where the run goes, and the three build keys a synthetic knee may set.",
+  "run": {
+    "_note": "The run writes the synthetic tree, <root>/synthetic_shape_axis = 02_simulations/synthetic_shape_axis, which derive_figure3_data.py reads. The v2 synthetic tree was built by this config with model_version fig5_cohort_build and RSubject_121 as the ninth donor.",
+    "root": "02_simulations"
+  },
+  "axis": {
+    "_note": "Axis = unit(mean(to_group) - mean(from_group)) in raw 2069-value descriptor units; sigma steps are the population mean + k * sd * axis, anchors sit at each group's mean projection.",
+    "_descriptor_models_note": "The cohort's saved shape-model fits, the same tree reconstruction.json's inputs.saved_fits reads. A rebuild never refits, so these latents and alignments are the cohort's whichever run is building; reading them here rather than from the run's own 01_models lets the axis be derived before any knee is rebuilt.",
+    "descriptor_models": "01_models/OARSI_May.22.2026_Full_run",
+    "groups": "00_inputs/groups.json",
+    "from_group": "kl0_1_healthy",
+    "to_group": "kl2",
+    "anchor_groups": ["kl0_1_healthy", "kl0_1_progressor", "kl2"],
+    "sigmas": [-3, -2, -1, 0, 1, 2, 3]
+  },
+  "build": {
+    "_note": "Everything about model building comes from reconstruction_config. meniscus_center_mode is midline, the same trim centre as the cohort's models; as_run reproduces the trim centres of the v2 synthetic knees. model_version is the run the data root declares, as for the cohort.",
+    "reconstruction_config": "reconstruction.json",
+    "model_version": "{run}",
+    "meniscus_center_mode": "midline"
+  },
+  "simulate": {
+    "_note": "One measured-gait config per donor; the reference (overground) gait is not simulated for the synthetic knees.",
+    "gait_config_dir": "measured_gait",
+    "gaits": [
+      "Subject_102",
+      "Subject_107",
+      "Subject_109",
+      "Subject_114",
+      "Subject_119",
+      "Subject_121",
+      "Subject_140",
+      "Subject_145",
+      "Subject_167"
+    ]
+  }
+}
